@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Printing Price Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .toggle-label span {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .input-section {
+            transition: opacity 0.3s;
+        }
+
+        .input-section.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .unit {
+            color: #666;
+            font-size: 14px;
+            min-width: 60px;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .cost-breakdown {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .cost-item:last-child {
+            border-bottom: none;
+        }
+
+        .cost-label {
+            color: #666;
+        }
+
+        .cost-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .total-cost {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .total-cost h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .total-cost .amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .pricing-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .price-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .price-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .price-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .price-card .markup {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .price-card .price {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .price-card .profit {
+            color: #28a745;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖨️ 3D Printing Price Calculator</h1>
+            <p>For Shopee Philippines Sellers</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>📐 3D Model Cost</h2>
+                <div class="input-group">
+                    <label>License Type</label>
+                    <div class="input-wrapper">
+                        <select id="modelLicenseType" style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                            <option value="none">No License Cost</option>
+                            <option value="onetime">One-Time Purchase</option>
+                            <option value="subscription">Monthly Subscription</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="modelCostInputs" class="input-section" style="display: none; margin-top: 15px;">
+                    <div class="input-group">
+                        <label id="modelCostLabel">Model Cost</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="modelCost" value="500" min="0" step="50">
+                            <span class="unit">₱</span>
+                        </div>
+                    </div>
+                    <div class="input-group" id="printVolumeGroup">
+                        <label id="printVolumeLabel">Expected Prints with this Model</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="printVolume" value="50" min="1" step="1">
+                            <span class="unit" id="printVolumeUnit">prints</span>
+                        </div>
+                    </div>
+                    <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; font-size: 13px; color: #1976d2;">
+                        <strong>Cost per print:</strong> <span id="modelCostPerPrint">₱0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>💰 Material Cost</h2>
+                <div class="input-group">
+                    <label>Print Weight</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="printWeight" value="50" min="0" step="0.1">
+                        <span class="unit">grams</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Filament Price per KG</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="filamentPrice" value="800" min="0" step="10">
+                        <span class="unit">₱</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Waste/Failed Print Allowance</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="wasteAllowance" value="15" min="0" max="100" step="1">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🖨️ Machine Cost</h2>
+                <div class="input-group">
+                    <label>Print Time</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="printTime" value="4" min="0" step="0.5">
+                        <span class="unit">hours</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Machine Cost per Hour</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="machineCost" value="18" min="0" step="1">
+                        <span class="unit">₱/hour</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>⚡ Electricity Cost</h2>
+                <div class="input-group">
+                    <label>Printer Power</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="printerWatts" value="150" min="0" step="10">
+                        <span class="unit">Watts</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Electricity Rate</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="electricityRate" value="12" min="0" step="0.5">
+                        <span class="unit">₱/kWh</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>👷 Labor & Other Costs</h2>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="includeLaborCosts" checked>
+                        <span>Include in calculation</span>
+                    </label>
+                </div>
+                <div id="laborSection" class="input-section">
+                    <div class="input-group">
+                        <label>Labor Time (design, post-processing, packaging)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="laborTime" value="0.5" min="0" step="0.1">
+                            <span class="unit">hours</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Hourly Labor Rate</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="laborRate" value="150" min="0" step="10">
+                            <span class="unit">₱/hour</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Packaging Materials</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="packagingCost" value="20" min="0" step="5">
+                            <span class="unit">₱</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>🛒 Shopee Fees</h2>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="includeShopeeFees" checked>
+                        <span>Include in calculation</span>
+                    </label>
+                </div>
+                <div id="shopeeSection" class="input-section">
+                    <div class="input-group">
+                        <label>Transaction Fee</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="transactionFee" value="2" min="0" step="0.1">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Fixed Transaction Fee</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="fixedFee" value="15" min="0" step="1">
+                            <span class="unit">₱</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Payment Processing Fee</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="paymentFee" value="2" min="0" step="0.1">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="calculate-btn" onclick="calculatePrice()">Calculate Price 🚀</button>
+
+            <div class="results hidden" id="results">
+                <div class="cost-breakdown">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Cost Breakdown</h3>
+                    <div class="cost-item">
+                        <span class="cost-label">Material Cost</span>
+                        <span class="cost-value" id="materialCostResult">₱0.00</span>
+                    </div>
+                    <div class="cost-item" id="modelCostItem" style="display: none;">
+                        <span class="cost-label">3D Model Cost</span>
+                        <span class="cost-value" id="modelCostResult">₱0.00</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Machine Cost</span>
+                        <span class="cost-value" id="machineCostResult">₱0.00</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Electricity Cost</span>
+                        <span class="cost-value" id="electricityCostResult">₱0.00</span>
+                    </div>
+                    <div class="cost-item" id="laborCostItem">
+                        <span class="cost-label">Labor Cost</span>
+                        <span class="cost-value" id="laborCostResult">₱0.00</span>
+                    </div>
+                    <div class="cost-item" id="packagingCostItem">
+                        <span class="cost-label">Packaging Cost</span>
+                        <span class="cost-value" id="packagingCostResult">₱0.00</span>
+                    </div>
+                </div>
+
+                <div class="total-cost">
+                    <h3 id="totalCostLabel">Total Production Cost</h3>
+                    <div class="amount" id="totalCost">₱0.00</div>
+                </div>
+
+                <h3 id="pricingHeading" style="color: #667eea; margin-bottom: 15px;">Suggested Selling Prices</h3>
+                <div class="pricing-options" id="pricingOptions"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle labor costs section
+        document.getElementById('includeLaborCosts').addEventListener('change', function() {
+            const section = document.getElementById('laborSection');
+            if (this.checked) {
+                section.classList.remove('disabled');
+            } else {
+                section.classList.add('disabled');
+            }
+        });
+
+        // Toggle Shopee fees section
+        document.getElementById('includeShopeeFees').addEventListener('change', function() {
+            const section = document.getElementById('shopeeSection');
+            if (this.checked) {
+                section.classList.remove('disabled');
+            } else {
+                section.classList.add('disabled');
+            }
+        });
+
+        // Handle model license type changes
+        document.getElementById('modelLicenseType').addEventListener('change', function() {
+            const modelCostInputs = document.getElementById('modelCostInputs');
+            const modelCostLabel = document.getElementById('modelCostLabel');
+            const printVolumeLabel = document.getElementById('printVolumeLabel');
+            const printVolumeUnit = document.getElementById('printVolumeUnit');
+            
+            if (this.value === 'none') {
+                modelCostInputs.style.display = 'none';
+            } else {
+                modelCostInputs.style.display = 'block';
+                
+                if (this.value === 'onetime') {
+                    modelCostLabel.textContent = 'One-Time Model Cost';
+                    printVolumeLabel.textContent = 'Expected Prints with this Model';
+                    printVolumeUnit.textContent = 'prints';
+                } else {
+                    modelCostLabel.textContent = 'Monthly Subscription Cost';
+                    printVolumeLabel.textContent = 'Expected Prints per Month';
+                    printVolumeUnit.textContent = 'prints/month';
+                }
+                
+                updateModelCostPerPrint();
+            }
+        });
+
+        // Update model cost per print when inputs change
+        document.getElementById('modelCost').addEventListener('input', updateModelCostPerPrint);
+        document.getElementById('printVolume').addEventListener('input', updateModelCostPerPrint);
+
+        function updateModelCostPerPrint() {
+            const modelCost = parseFloat(document.getElementById('modelCost').value) || 0;
+            const printVolume = parseFloat(document.getElementById('printVolume').value) || 1;
+            const costPerPrint = printVolume > 0 ? modelCost / printVolume : 0;
+            document.getElementById('modelCostPerPrint').textContent = '₱' + costPerPrint.toFixed(2);
+        }
+
+        function calculatePrice() {
+            try {
+                // Get all input values
+                const printWeight = parseFloat(document.getElementById('printWeight').value) || 0;
+                const filamentPrice = parseFloat(document.getElementById('filamentPrice').value) || 0;
+                const wasteAllowance = parseFloat(document.getElementById('wasteAllowance').value) || 0;
+                const printTime = parseFloat(document.getElementById('printTime').value) || 0;
+                const machineCost = parseFloat(document.getElementById('machineCost').value) || 0;
+                const printerWatts = parseFloat(document.getElementById('printerWatts').value) || 0;
+                const electricityRate = parseFloat(document.getElementById('electricityRate').value) || 0;
+                
+                // Calculate model cost per print
+                const modelLicenseType = document.getElementById('modelLicenseType').value;
+                let modelCostPerPrint = 0;
+                if (modelLicenseType !== 'none') {
+                    const modelCost = parseFloat(document.getElementById('modelCost').value) || 0;
+                    const printVolume = parseFloat(document.getElementById('printVolume').value) || 1;
+                    modelCostPerPrint = printVolume > 0 ? modelCost / printVolume : 0;
+                }
+                
+                // Check if labor costs should be included
+                const includeLaborCosts = document.getElementById('includeLaborCosts').checked;
+                const laborTime = includeLaborCosts ? (parseFloat(document.getElementById('laborTime').value) || 0) : 0;
+                const laborRate = includeLaborCosts ? (parseFloat(document.getElementById('laborRate').value) || 0) : 0;
+                const packagingCost = includeLaborCosts ? (parseFloat(document.getElementById('packagingCost').value) || 0) : 0;
+                
+                // Check if Shopee fees should be included
+                const includeShopeeFees = document.getElementById('includeShopeeFees').checked;
+                const transactionFee = includeShopeeFees ? (parseFloat(document.getElementById('transactionFee').value) || 0) : 0;
+                const fixedFee = includeShopeeFees ? (parseFloat(document.getElementById('fixedFee').value) || 0) : 0;
+                const paymentFee = includeShopeeFees ? (parseFloat(document.getElementById('paymentFee').value) || 0) : 0;
+
+                // Calculate costs
+                const materialCost = (printWeight / 1000) * filamentPrice * (1 + wasteAllowance / 100);
+                const machineCostTotal = printTime * machineCost;
+                const electricityCost = (printerWatts / 1000) * printTime * electricityRate;
+                const laborCostTotal = laborTime * laborRate;
+                
+                const totalCostBeforeFees = materialCost + modelCostPerPrint + machineCostTotal + electricityCost + laborCostTotal + packagingCost;
+
+                // Display cost breakdown
+                document.getElementById('materialCostResult').textContent = '₱' + materialCost.toFixed(2);
+                
+                // Show/hide model cost based on license type
+                const modelCostItem = document.getElementById('modelCostItem');
+                if (modelLicenseType !== 'none') {
+                    document.getElementById('modelCostResult').textContent = '₱' + modelCostPerPrint.toFixed(2);
+                    modelCostItem.style.display = 'flex';
+                } else {
+                    modelCostItem.style.display = 'none';
+                }
+                
+                document.getElementById('machineCostResult').textContent = '₱' + machineCostTotal.toFixed(2);
+                document.getElementById('electricityCostResult').textContent = '₱' + electricityCost.toFixed(2);
+                
+                // Show/hide labor and packaging costs based on checkbox
+                const laborCostItem = document.getElementById('laborCostItem');
+                const packagingCostItem = document.getElementById('packagingCostItem');
+                
+                if (includeLaborCosts) {
+                    document.getElementById('laborCostResult').textContent = '₱' + laborCostTotal.toFixed(2);
+                    document.getElementById('packagingCostResult').textContent = '₱' + packagingCost.toFixed(2);
+                    laborCostItem.style.display = 'flex';
+                    packagingCostItem.style.display = 'flex';
+                } else {
+                    laborCostItem.style.display = 'none';
+                    packagingCostItem.style.display = 'none';
+                }
+                
+                document.getElementById('totalCost').textContent = '₱' + totalCostBeforeFees.toFixed(2);
+                
+                // Update the total cost label based on what's included
+                let costLabel = 'Total Production Cost';
+                if (!includeLaborCosts && !includeShopeeFees) {
+                    costLabel = 'Total Production Cost (Materials + Machine + Electricity only)';
+                } else if (!includeLaborCosts) {
+                    costLabel = 'Total Production Cost (excluding Labor & Packaging)';
+                } else if (!includeShopeeFees) {
+                    costLabel = 'Total Production Cost (before Shopee fees)';
+                }
+                document.getElementById('totalCostLabel').textContent = costLabel;
+
+                // Calculate suggested prices with different markups
+                const markups = [
+                    { name: 'Budget', percentage: 50, description: 'High competition' },
+                    { name: 'Standard', percentage: 100, description: 'Simple items' },
+                    { name: 'Premium', percentage: 150, description: 'Complex items' },
+                    { name: 'Luxury', percentage: 200, description: 'Unique designs' }
+                ];
+
+                let pricingHtml = '';
+                markups.forEach(function(markup) {
+                    // Calculate selling price before fees
+                    const sellingPriceBeforeFees = totalCostBeforeFees * (1 + markup.percentage / 100);
+                    
+                    // Calculate Shopee fees based on selling price (only if included)
+                    const shopeeFees = includeShopeeFees 
+                        ? (sellingPriceBeforeFees * (transactionFee + paymentFee) / 100) + fixedFee 
+                        : 0;
+                    
+                    // Final selling price including fees
+                    const finalSellingPrice = sellingPriceBeforeFees + shopeeFees;
+                    
+                    // Profit after all costs and fees
+                    const profit = finalSellingPrice - totalCostBeforeFees - shopeeFees;
+
+                    const feesDisplay = includeShopeeFees 
+                        ? '<div style="font-size: 10px; color: #999; margin-top: 5px;">Shopee fees: ₱' + shopeeFees.toFixed(2) + '</div>'
+                        : '';
+
+                    pricingHtml += '<div class="price-card">' +
+                        '<h4>' + markup.name + '</h4>' +
+                        '<div class="markup">' + markup.percentage + '% markup</div>' +
+                        '<div class="markup" style="font-size: 10px; color: #999;">' + markup.description + '</div>' +
+                        '<div class="price">₱' + finalSellingPrice.toFixed(2) + '</div>' +
+                        '<div class="profit">Profit: ₱' + profit.toFixed(2) + '</div>' +
+                        feesDisplay +
+                        '</div>';
+                });
+
+                document.getElementById('pricingOptions').innerHTML = pricingHtml;
+                
+                // Update pricing section heading based on what's included
+                const pricingHeading = includeShopeeFees 
+                    ? 'Suggested Selling Prices (with Shopee fees included)'
+                    : 'Suggested Selling Prices (without platform fees)';
+                document.getElementById('pricingHeading').textContent = pricingHeading;
+                
+                // Show results
+                document.getElementById('results').classList.remove('hidden');
+                
+                // Smooth scroll to results
+                setTimeout(function() {
+                    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+                
+            } catch (error) {
+                alert('Error calculating price: ' + error.message);
+                console.error('Calculation error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
